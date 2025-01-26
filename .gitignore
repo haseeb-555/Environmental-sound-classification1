@@ -1,0 +1,44 @@
+# Virtual environment (Python/Flask)
+venv/
+
+# Node.js dependencies (Vue.js/Frontend)
+node_modules/
+
+# Uploads directory (may contain user-generated or temporary files)
+uploads/
+
+# Build files (if generated)
+dist/
+build/
+
+# Logs
+*.log
+
+# Environment configuration
+.env
+
+# Python cache files
+_pycache_/
+*.pyc
+*.pyo
+
+# Package manager lock files (optional, based on team preference)
+package-lock.json
+package.json
+
+
+# IDE/editor configurations
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary/system files
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+
+# Ignore frontend and backend build outputs if applicable
+frontend/dist/
+backend/build/
