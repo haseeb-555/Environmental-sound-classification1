@@ -42,3 +42,8 @@ Thumbs.db
 # Ignore frontend and backend build outputs if applicable
 frontend/dist/
 backend/build/
+backend/uploads
+backend/processed
+backend/model_9967_mel.h5
+backend/model1.h5
+backend/sample_audio/
