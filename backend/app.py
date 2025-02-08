@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import os
 import librosa
@@ -20,6 +20,8 @@ UPLOAD_FOLDER = "uploads"
 OUTPUT_FOLDER = "processed"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+audios=['Fire', 'Rain', 'Thunderstorm', 'WaterDrops', 'Wind', 'Silence', 'TreeFalling', 'Helicopter', 'VehicleEngine', 'Axe', 'Chainsaw', 'Generator', 'Handsaw', 'Firework', 'Gunshot', 'WoodChop', 'Whistling', 'Speaking', 'Footsteps', 'Clapping', 'Insect', 'Frog', 'BirdChirping', 'WingFlaping', 'Lion', 'WolfHowl', 'Squirrel']
 
 def apply_noise_reduction(data, rate):
     return nr.reduce_noise(y=data, sr=rate)
@@ -45,6 +47,12 @@ def extract_mfcc_and_save_image(file_path, image_path):
     plt.tight_layout()
     plt.savefig(image_path, bbox_inches='tight', pad_inches=0)
     plt.close()
+
+# Serve static images
+@app.route('/static/images/<filename>')
+def serve_image(filename):
+    return send_from_directory("static/images", filename)
+
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -76,24 +84,28 @@ def upload_file():
     
     image_path = os.path.join(OUTPUT_FOLDER, f"{os.path.splitext(file.filename)[0]}.png")
     extract_mfcc_and_save_image(processed_file_path, image_path)
-    print(prediction(image_path))
+    
+    prediction_result = prediction(image_path)  # Get prediction result
 
+    return jsonify({"message": "File processed successfully", "image_path": image_path, "prediction": prediction_result}), 200
 
-    return jsonify({"message": "File processed successfully", "image_path": image_path}), 200
 
 @app.route("/get_image", methods=["GET"])
 def get_image():
     image_path = request.args.get("image_path")
     if not image_path or not os.path.exists(image_path):
         return jsonify({"error": "Image not found"}), 404
-    print(prediction(image_path))
+    
     return send_file(image_path, mimetype='image/png')
 
-from keras.preprocessing import image
 
+
+
+from keras.preprocessing import image
 import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
+
 
 def prediction(image_path):
     try:
@@ -103,23 +115,21 @@ def prediction(image_path):
 
         # Convert to numpy array and normalize
         X = np.expand_dims(img_array, axis=0)  # Adding batch dimension (1, 224, 224, 3)
-        X=X/255
-        print(X)
-        print(f"Processed image shape: {X.shape}")
+        X = X / 255.0
 
         # Load the model
         model = load_model("model_9967_mel.h5")
 
         # Predict
         predictions = model.predict(X)  # No need for another expand_dims
-        print(X)
         predicted_class = np.argmax(predictions)
 
-
         print(f"Predicted Class: {predicted_class}")
+        return audios[int(predicted_class)]# Ensure integer value is returned
 
     except Exception as e:
         print(f"Error loading {image_path}: {e}")
+        return "Error"
 
 
 from tensorflow.keras.models import load_model
@@ -129,7 +139,3 @@ from tensorflow.keras.models import load_model
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-
