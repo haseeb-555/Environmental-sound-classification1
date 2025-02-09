@@ -5,7 +5,7 @@
       <input type="file" @change="handleFileChange" accept="audio/*" />
       <button @click="uploadFile" :disabled="!selectedFile">Upload</button>
     </div>
-
+    
     <div v-if="audioUrl" class="audio-player">
       <h3>🎧 Listen to Uploaded Audio</h3>
       <audio controls>
@@ -17,8 +17,13 @@
     <div v-if="predictionResult !== null" class="result-card">
       <h3>🔍 Prediction Result</h3>
       <p>{{ predictionResult }}</p>
-      <img v-if="imageUrl" :src="imageUrl" alt="Prediction Image" />
-      <p v-if="!imageUrl" class="no-image">No Image Available</p>
+      
+      <div v-if="imageUrl || serverImageUrl">
+        <h4>Prediction Image :</h4>
+        <img v-if="imageUrl" :src="imageUrl" alt="Mapped Prediction Image" />
+        <h4> Spectrogram image : </h4>
+        <img v-if="serverImageUrl" :src="serverImageUrl" alt="Processed Image" />
+      </div>
     </div>
   </div>
 </template>
@@ -32,6 +37,7 @@ export default {
       selectedFile: null,
       predictionResult: null,
       imageUrl: "",
+      serverImageUrl: "",
       audioUrl: "",
       imagesMap: {
         "Fire": "fire.jpg",
@@ -94,13 +100,16 @@ export default {
 
         this.predictionResult = response.data.prediction;
 
-        // **Map Prediction to Image**
+        // Map Prediction to Image
         let imageFile = this.imagesMap[this.predictionResult];
         if (imageFile) {
           this.imageUrl = `http://127.0.0.1:5000/static/images/${imageFile}`;
         } else {
           this.imageUrl = "";
         }
+
+        // Server-Generated Image
+        this.serverImageUrl = `http://127.0.0.1:5000/get_image?image_path=${encodeURIComponent(response.data.image_path)}`;
       } catch (error) {
         console.error("Error uploading file:", error);
         alert("Failed to upload file.");
@@ -152,14 +161,13 @@ button:disabled {
   margin-top: 20px;
 }
 img {
-  margin-top: 20px;
+  margin-top: 10px;
   max-width: 100%;
   border: 2px solid #ddd;
   border-radius: 5px;
-}
-.no-image {
-  font-size: 14px;
-  color: #ff6961;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 audio {
   width: 100%;
