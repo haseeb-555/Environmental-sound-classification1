@@ -19,9 +19,9 @@
       <p>{{ predictionResult }}</p>
       
       <div v-if="imageUrl || serverImageUrl">
-        <h4>Prediction Image :</h4>
+        <h4>Prediction Image:</h4>
         <img v-if="imageUrl" :src="imageUrl" alt="Mapped Prediction Image" />
-        <h4> Spectrogram image : </h4>
+        <h4>Spectrogram Image:</h4>
         <img v-if="serverImageUrl" :src="serverImageUrl" alt="Processed Image" />
       </div>
     </div>
@@ -63,7 +63,7 @@ export default {
         "Insect": "insect.jpg",
         "Frog": "frog.jpg",
         "BirdChirping": "birdchirping.jpg",
-        "WingFlaping": "wingflaping.jpg",
+        "WingFlapping": "wingflapping.jpg",
         "Lion": "lion.jpg",
         "WolfHowl": "wolfhowl.jpg",
         "Squirrel": "squirrel.jpg"
@@ -77,18 +77,27 @@ export default {
         this.audioUrl = URL.createObjectURL(this.selectedFile);
       }
     },
+
     async uploadFile() {
       if (!this.selectedFile) {
         alert("Please select a file first.");
         return;
       }
 
+      // Get token and user ID from local storage
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("user_id");
+
       const formData = new FormData();
       formData.append("file", this.selectedFile);
+      formData.append("user_id", userId);  // Include user ID in form data
 
       try {
         const response = await axios.post("http://127.0.0.1:5000/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`  // Include access token
+          },
         });
 
         console.log("Response from server:", response.data);
@@ -102,11 +111,7 @@ export default {
 
         // Map Prediction to Image
         let imageFile = this.imagesMap[this.predictionResult];
-        if (imageFile) {
-          this.imageUrl = `http://127.0.0.1:5000/static/images/${imageFile}`;
-        } else {
-          this.imageUrl = "";
-        }
+        this.imageUrl = imageFile ? `http://127.0.0.1:5000/static/images/${imageFile}` : "";
 
         // Server-Generated Image
         this.serverImageUrl = `http://127.0.0.1:5000/get_image?image_path=${encodeURIComponent(response.data.image_path)}`;
